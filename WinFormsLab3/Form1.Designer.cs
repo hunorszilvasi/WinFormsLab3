@@ -39,8 +39,16 @@
             toolStripTextBox2 = new ToolStripTextBox();
             toolStripButton5 = new ToolStripButton();
             toolStripComboBox1 = new ToolStripComboBox();
+            menuStrip1 = new MenuStrip();
+            databaseToolStripMenuItem = new ToolStripMenuItem();
+            connectionToolStripMenuItem = new ToolStripMenuItem();
+            disconnectToolStripMenuItem = new ToolStripMenuItem();
+            addKeywordToolStripMenuItem = new ToolStripMenuItem();
+            viewKeywordsToolStripMenuItem = new ToolStripMenuItem();
+            removeKeywordToolStripMenuItem = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)webView21).BeginInit();
             toolStrip1.SuspendLayout();
+            menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // webView21
@@ -58,7 +66,7 @@
             // toolStrip1
             // 
             toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripButton1, toolStripButton2, toolStripButton3, toolStripTextBox1, toolStripButton4, toolStripTextBox2, toolStripButton5, toolStripComboBox1 });
-            toolStrip1.Location = new Point(0, 0);
+            toolStrip1.Location = new Point(0, 24);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(800, 25);
             toolStrip1.TabIndex = 1;
@@ -134,19 +142,74 @@
             toolStripComboBox1.Size = new Size(121, 25);
             toolStripComboBox1.Click += toolStripComboBox1_Click;
             // 
+            // menuStrip1
+            // 
+            menuStrip1.Items.AddRange(new ToolStripItem[] { databaseToolStripMenuItem });
+            menuStrip1.Location = new Point(0, 0);
+            menuStrip1.Name = "menuStrip1";
+            menuStrip1.Size = new Size(800, 24);
+            menuStrip1.TabIndex = 2;
+            menuStrip1.Text = "menuStrip1";
+            // 
+            // databaseToolStripMenuItem
+            // 
+            databaseToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { connectionToolStripMenuItem, disconnectToolStripMenuItem, addKeywordToolStripMenuItem, viewKeywordsToolStripMenuItem, removeKeywordToolStripMenuItem });
+            databaseToolStripMenuItem.Name = "databaseToolStripMenuItem";
+            databaseToolStripMenuItem.Size = new Size(67, 20);
+            databaseToolStripMenuItem.Text = "Database";
+            // 
+            // connectionToolStripMenuItem
+            // 
+            connectionToolStripMenuItem.Name = "connectionToolStripMenuItem";
+            connectionToolStripMenuItem.Size = new Size(180, 22);
+            connectionToolStripMenuItem.Text = "Connection";
+            connectionToolStripMenuItem.Click += connectionToolStripMenuItem_Click;
+            // 
+            // disconnectToolStripMenuItem
+            // 
+            disconnectToolStripMenuItem.Name = "disconnectToolStripMenuItem";
+            disconnectToolStripMenuItem.Size = new Size(180, 22);
+            disconnectToolStripMenuItem.Text = "Disconnect";
+            disconnectToolStripMenuItem.Click += disconnectToolStripMenuItem_Click;
+            // 
+            // addKeywordToolStripMenuItem
+            // 
+            addKeywordToolStripMenuItem.Name = "addKeywordToolStripMenuItem";
+            addKeywordToolStripMenuItem.Size = new Size(180, 22);
+            addKeywordToolStripMenuItem.Text = "AddKeyword";
+            addKeywordToolStripMenuItem.Click += addKeywordToolStripMenuItem_Click;
+            // 
+            // viewKeywordsToolStripMenuItem
+            // 
+            viewKeywordsToolStripMenuItem.Name = "viewKeywordsToolStripMenuItem";
+            viewKeywordsToolStripMenuItem.Size = new Size(180, 22);
+            viewKeywordsToolStripMenuItem.Text = "ViewKeywords";
+            viewKeywordsToolStripMenuItem.Click += viewKeywordsToolStripMenuItem_Click;
+            // 
+            // removeKeywordToolStripMenuItem
+            // 
+            removeKeywordToolStripMenuItem.Name = "removeKeywordToolStripMenuItem";
+            removeKeywordToolStripMenuItem.Size = new Size(180, 22);
+            removeKeywordToolStripMenuItem.Text = "RemoveKeyword";
+            removeKeywordToolStripMenuItem.Click += removeKeywordToolStripMenuItem_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             Controls.Add(toolStrip1);
+            Controls.Add(menuStrip1);
             Controls.Add(webView21);
+            MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "Form1";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)webView21).EndInit();
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -163,5 +226,12 @@
         private ToolStripTextBox toolStripTextBox2;
         private ToolStripButton toolStripButton5;
         private ToolStripComboBox toolStripComboBox1;
+        private MenuStrip menuStrip1;
+        private ToolStripMenuItem databaseToolStripMenuItem;
+        private ToolStripMenuItem connectionToolStripMenuItem;
+        private ToolStripMenuItem disconnectToolStripMenuItem;
+        private ToolStripMenuItem addKeywordToolStripMenuItem;
+        private ToolStripMenuItem viewKeywordsToolStripMenuItem;
+        private ToolStripMenuItem removeKeywordToolStripMenuItem;
     }
 }

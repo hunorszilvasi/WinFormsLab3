@@ -6,12 +6,10 @@ namespace WinFormsLab3
 {
     public partial class Form1 : Form
     {
-        private List<string> blockedWords = new List<string>
-        {
-            "facebook",
-            "tiktok",
-            "instagram"
-        };
+        private SQLiteHandler dbHandler = new SQLiteHandler();
+        private bool isConnected = false;
+
+        private List<string> blockedWords = new List<string>();
         private const string HomePage = "https://www.google.com";
         public Form1()
         {
@@ -150,33 +148,215 @@ namespace WinFormsLab3
 
         private void toolStripButton5_Click(object sender, EventArgs e)
         {
-            string newWord =
-        toolStripTextBox2.Text.Trim().ToLower();
+            if (!isConnected)
+            {
+                MessageBox.Show("Először csatlakozz az adatbázishoz!");
+                return;
+            }
+
+            string newWord = toolStripTextBox2.Text.Trim().ToLower();
 
             if (string.IsNullOrWhiteSpace(newWord))
+                return;
+
+            if (blockedWords.Contains(newWord))
             {
+                MessageBox.Show("A kulcsszó már létezik!");
                 return;
             }
 
-            bool exists =
-                blockedWords.Any(word => word == newWord);
-
-            if (exists)
+            try
             {
+                dbHandler.InsertKeyword(newWord);
+
+                blockedWords.Add(newWord);
+                toolStripComboBox1.Items.Add(newWord);
+                toolStripTextBox2.Clear();
+
+                MessageBox.Show($"Kulcsszó sikeresen hozzáadva: {newWord}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Hiba a kulcsszó mentésekor: " + ex.Message);
+            }
+        }
+
+        private void connectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                dbHandler.ConnectToDb();
+                isConnected = true;
+
+                blockedWords.Clear();
+                blockedWords.AddRange(dbHandler.GetAllKeywords());
+
+                toolStripComboBox1.Items.Clear();
+
+                foreach (string word in blockedWords)
+                {
+                    toolStripComboBox1.Items.Add(word);
+                }
+
                 MessageBox.Show(
-                    "A kulcsszó már létezik!");
+                    "Successfully connected to the database!",
+                    "Database",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception ex)
+            {
+                isConnected = false;
 
+                MessageBox.Show(
+                    "Database connection failed: " + ex.Message,
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isConnected)
+            {
+                MessageBox.Show("Az adatbázis nincs csatlakoztatva!");
                 return;
             }
 
-            blockedWords.Add(newWord);
+            dbHandler.DisconnectFromDb();
+            isConnected = false;
 
-            toolStripComboBox1.Items.Add(newWord);
+            blockedWords.Clear();
+            toolStripComboBox1.Items.Clear();
 
-            toolStripTextBox2.Clear();
+            MessageBox.Show("Sikeresen lecsatlakoztál az adatbázisról!");
+        }
 
-            MessageBox.Show(
-                $"Kulcsszó hozzáadva: {newWord}");
+        private void addKeywordToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isConnected)
+            {
+                MessageBox.Show("Először csatlakozz az adatbázishoz!");
+                return;
+            }
+
+            using (Form2 form = new Form2())
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    string newWord = form.GetInputText().ToLower();
+
+                    if (string.IsNullOrWhiteSpace(newWord))
+                    {
+                        MessageBox.Show("A kulcsszó nem lehet üres!");
+                        return;
+                    }
+
+                    if (blockedWords.Contains(newWord))
+                    {
+                        MessageBox.Show("Ez a kulcsszó már létezik!");
+                        return;
+                    }
+
+                    try
+                    {
+                        dbHandler.InsertKeyword(newWord);
+
+                        blockedWords.Add(newWord);
+                        toolStripComboBox1.Items.Add(newWord);
+
+                        MessageBox.Show($"Kulcsszó sikeresen hozzáadva: {newWord}");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Hiba a mentés során: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        private void viewKeywordsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isConnected)
+            {
+                MessageBox.Show("Először csatlakozz az adatbázishoz!");
+                return;
+            }
+
+            try
+            {
+                List<string> keywords = dbHandler.GetAllKeywords();
+
+                if (keywords.Count == 0)
+                {
+                    MessageBox.Show("Az adatbázis nem tartalmaz kulcsszavakat.");
+                    return;
+                }
+
+                string message = string.Join(Environment.NewLine, keywords);
+
+                MessageBox.Show(
+                    message,
+                    "Adatbázisban tárolt kulcsszavak",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Hiba a kulcsszavak lekérésekor: " + ex.Message);
+            }
+        }
+
+        private void removeKeywordToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isConnected)
+            {
+                MessageBox.Show("Először csatlakozz az adatbázishoz!");
+                return;
+            }
+
+            string keyword = toolStripComboBox1.Text.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                MessageBox.Show("Válassz ki vagy adj meg egy kulcsszót!");
+                return;
+            }
+
+            if (!blockedWords.Contains(keyword))
+            {
+                MessageBox.Show("Ez a kulcsszó nem található a tiltólistában!");
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                $"Biztosan törölni szeretnéd ezt a kulcsszót: {keyword}?",
+                "Kulcsszó törlése",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (result != DialogResult.Yes)
+                return;
+
+            try
+            {
+                dbHandler.DeleteKeyword(keyword);
+
+                blockedWords.Remove(keyword);
+                toolStripComboBox1.Items.Remove(keyword);
+                toolStripComboBox1.Text = "";
+
+                MessageBox.Show($"A(z) '{keyword}' kulcsszó sikeresen törölve!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Hiba a kulcsszó törlésekor: " + ex.Message);
+            }
         }
     }
 }
