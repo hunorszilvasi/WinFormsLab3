@@ -22,9 +22,9 @@ namespace WinFormsLab3
 
             string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS Keywords (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    keyword TEXT
-                );";
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                keyword TEXT NOT NULL COLLATE NOCASE UNIQUE
+            );";
 
             using (SqliteCommand command =
                    new SqliteCommand(createTableQuery, connection))

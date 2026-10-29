@@ -24,11 +24,25 @@ namespace WinFormsLab3
             return textBox1.Text.Trim();
         }
 
+
         private void button2_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(textBox1.Text))
+            {
+                MessageBox.Show(
+                    "Introdu un cuvant cheie!",
+                    "Atentie",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                textBox1.Focus();
+                return;
+            }
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
 
         private void button1_Click(object sender, EventArgs e)
         {

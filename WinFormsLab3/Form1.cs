@@ -19,80 +19,166 @@ namespace WinFormsLab3
 
         }
 
-        private void WebView21_NavigationCompleted(
+
+        private async void WebView21_NavigationCompleted(
             object? sender,
             CoreWebView2NavigationCompletedEventArgs e)
         {
-            if (!e.IsSuccess &&
-                e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
+            if (e.IsSuccess)
             {
+                await WriteLogAsync(
+                    $"Navigation completed: {webView21.Source}");
+            }
+            else if (e.WebErrorStatus !=
+                     CoreWebView2WebErrorStatus.OperationCanceled)
+            {
+                await WriteLogAsync(
+                    $"Navigation failed: {e.WebErrorStatus}");
+
                 MessageBox.Show(
                     $"Navigációs hiba: {e.WebErrorStatus}");
             }
         }
+
 
         private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
 
         }
 
+
         private async void Form1_Load(object sender, EventArgs e)
         {
             await webView21.EnsureCoreWebView2Async();
 
-            webView21.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
+            webView21.CoreWebView2.NavigationStarting
+                += CoreWebView2_NavigationStarting;
 
             Trace.Listeners.Clear();
             Trace.Listeners.Add(
                 new TextWriterTraceListener("log.txt"));
             Trace.AutoFlush = true;
 
-            webView21.Source = new Uri(HomePage);
-
-            foreach (string word in blockedWords)
+            try
             {
-                toolStripComboBox1.Items.Add(word);
+                dbHandler.ConnectToDb();
+                isConnected = true;
+
+                blockedWords.Clear();
+                blockedWords.AddRange(dbHandler.GetAllKeywords());
+
+                toolStripComboBox1.Items.Clear();
+
+                foreach (string word in blockedWords)
+                {
+                    toolStripComboBox1.Items.Add(word);
+                }
+
+                Trace.WriteLine("Database connected and keywords loaded.");
             }
+            catch (Exception ex)
+            {
+                isConnected = false;
+
+                MessageBox.Show(
+                    "Database connection failed: " + ex.Message,
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+
+            webView21.Source = new Uri(HomePage);
         }
+
 
         private void CoreWebView2_NavigationStarting(
             object? sender,
             CoreWebView2NavigationStartingEventArgs e)
         {
-            string url = e.Uri.ToLower();
 
-            string? blockedWord =
-                blockedWords.FirstOrDefault(word => url.Contains(word));
+            string url = e.Uri;
+
+            string? blockedWord = blockedWords.FirstOrDefault(word =>
+                url.Contains(word, StringComparison.OrdinalIgnoreCase));
+
+
 
             if (blockedWord != null)
             {
                 e.Cancel = true;
 
+                Trace.WriteLine(
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - " +
+                    $"Blocked URL: {url}, keyword: {blockedWord}");
+
                 MessageBox.Show(
                     $"Tiltott oldal! ({blockedWord})");
             }
+
         }
+
 
         private async Task<string?> FindBlockedWordAsync(string url)
         {
             return await Task.Run(() =>
             {
-                return blockedWords
-                    .FirstOrDefault(word => url.Contains(word));
+                return blockedWords.FirstOrDefault(word =>
+                    url.Contains(
+                        word,
+                        StringComparison.OrdinalIgnoreCase));
             });
         }
 
+
         private async void toolStripButton1_Click(object sender, EventArgs e)
         {
+            string? blockedWord = await FindBlockedWordAsync(HomePage);
+
+            if (blockedWord != null)
+            {
+                MessageBox.Show($"Tiltott oldal! ({blockedWord})");
+                await WriteLogAsync($"Blocked URL: {HomePage}");
+                return;
+            }
+
             webView21.Source = new Uri(HomePage);
             await WriteLogAsync("Home button clicked");
         }
 
+
         private async void toolStripButton4_Click(object sender, EventArgs e)
         {
-            webView21.Source = new Uri(toolStripTextBox1.Text);
-            await WriteLogAsync("Go button clicked");
+            string url = toolStripTextBox1.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(url))
+                return;
+
+            if (!url.StartsWith("http://") &&
+                !url.StartsWith("https://"))
+            {
+                url = "https://" + url;
+            }
+
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+            {
+                MessageBox.Show("Érvénytelen URL!");
+                return;
+            }
+
+            string? blockedWord = await FindBlockedWordAsync(
+                uri.ToString().ToLowerInvariant());
+
+            if (blockedWord != null)
+            {
+                MessageBox.Show($"Tiltott oldal! ({blockedWord})");
+                await WriteLogAsync($"Blocked URL: {url}");
+                return;
+            }
+
+            webView21.Source = uri;
+            await WriteLogAsync($"Navigating to: {url}");
         }
+
 
         private async void toolStripButton2_Click(object sender, EventArgs e)
         {
@@ -117,13 +203,45 @@ namespace WinFormsLab3
 
         }
 
-        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
+
+        private async void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                webView21.Source = new Uri(toolStripTextBox1.Text);
+                e.SuppressKeyPress = true;
+
+                string url = toolStripTextBox1.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(url))
+                    return;
+
+                if (!url.StartsWith("http://") &&
+                    !url.StartsWith("https://"))
+                {
+                    url = "https://" + url;
+                }
+
+                if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+                {
+                    MessageBox.Show("Érvénytelen URL!");
+                    return;
+                }
+
+                string? blockedWord = await FindBlockedWordAsync(
+                    uri.ToString().ToLowerInvariant());
+
+                if (blockedWord != null)
+                {
+                    MessageBox.Show($"Tiltott oldal! ({blockedWord})");
+                    await WriteLogAsync($"Blocked URL: {url}");
+                    return;
+                }
+
+                webView21.Source = uri;
+                await WriteLogAsync($"Navigating to: {url}");
             }
         }
+
 
         private async Task WriteLogAsync(string message)
         {
